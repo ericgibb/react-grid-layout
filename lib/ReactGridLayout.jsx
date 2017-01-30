@@ -388,7 +388,7 @@ export default class ReactGridLayout extends React.Component {
     if (!l) return null;
     const {width, cols, margin, containerPadding, rowHeight,
            maxRows, isDraggable, isResizable, useCSSTransforms,
-           draggableCancel, draggableHandle} = this.props;
+           draggableCancel, draggableHandle, sectionsBounds, section} = this.props;
     const {mounted} = this.state;
 
     // Parse 'static'. Any properties defined directly on the grid item will take precedence.
@@ -415,6 +415,8 @@ export default class ReactGridLayout extends React.Component {
         isResizable={resizable}
         useCSSTransforms={useCSSTransforms && mounted}
         usePercentages={!mounted}
+        sectionsBounds={sectionsBounds}
+        section={section}
 
         w={l.w}
         h={l.h}
