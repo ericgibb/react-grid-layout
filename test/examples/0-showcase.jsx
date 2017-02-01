@@ -50,6 +50,10 @@ class ShowcaseLayout extends Component {
   };
 
   onLayoutChange = (layout, layouts) => {
+    console.log('ON LAYOUT CHANGED', this.state.sectionsLayouts);
+    //this.setState({
+    //  sectionsBounds: this.getSectionsBounds(this.state.sectionsLayouts),
+    //});
     this.props.onLayoutChange(layout, layouts);
   };
 
@@ -65,28 +69,29 @@ class ShowcaseLayout extends Component {
     console.log('onGridItemDragStop')
   };
 
-  getLayoutBounds(el) {
-    return el.getBoundingClientRect();
+  getLayoutBounds(node) {
+    const clientRect = node.getBoundingClientRect();
+    const scrollLeft = window.pageXOffset ||  (document.documentElement || document.body.parentNode || document.body).scrollLeft;
+    const scrollTop = window.pageYOffset || (document.documentElement || document.body.parentNode || document.body).scrollTop;
+    //console.log('document.documentElement.scrollTop', document.documentElement.scrollTop)
+    console.log('scrollTop', scrollTop)
+    return {
+      left : clientRect.left + scrollLeft,
+      top : clientRect.top + scrollTop,
+      bottom : clientRect.bottom,
+      right : clientRect.right,
+      width: clientRect.width,
+      height: clientRect.height,
+    };
   }
 
   getSectionsBounds(sections) {
     return Object.keys(sections).reduce((acc, key)=> {
-      acc[key] = this.getLayoutBounds(findDOMNode(this[`${key}`]))
+      acc[key] = this.getLayoutBounds(findDOMNode(this[`${key}`]));
       return acc;
     }, {})
   }
 
-  collide = (el1, el2) => {
-    var rect1 = el1.getBoundingClientRect();
-    var rect2 = el2.getBoundingClientRect();
-
-    return !(
-      rect1.top > rect2.bottom ||
-      rect1.right < rect2.left ||
-      rect1.bottom < rect2.top ||
-      rect1.left > rect2.right
-    );
-  };
 
   renderGridLayouts() {
     return Object.keys(this.state.sectionsLayouts).map((sectionKey, index)=> {

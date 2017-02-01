@@ -274,8 +274,8 @@ export default class GridItem extends React.Component {
     );
   }
 
-  stopDrag = (node) => {
-    const newUpEvent = new MouseEvent('mouseup');
+  stopDrag = (e, node) => {
+    const newUpEvent = new MouseEvent('mouseup', Object.assign({}, {...e}, {target: node}));
     this.onDragHandler('onDragStop')(newUpEvent, {node});
   };
 
@@ -301,8 +301,8 @@ export default class GridItem extends React.Component {
     return (e:Event, {node, deltaX, deltaY}: DragCallbackData) => {
       if (!this.props[handlerName]) return;
 
-      const newPosition:{top: number, left: number} = {top: 0, left: 0};
-      const sectionsBounds = Object.keys(this.props.sectionsBounds).filter(sectionKey=> sectionKey !== this.props.section)
+      const newPosition:{top: number, left: number,width: number,height: number} = {top: 0, left: 0};
+      const sectionsBounds = Object.keys(this.props.sectionsBounds).filter(sectionKey=> sectionKey !== this.props.section);
 
       // Get new XY
       switch(handlerName) {
@@ -315,7 +315,6 @@ export default class GridItem extends React.Component {
           newPosition.left = clientRect.left - parentRect.left;
           newPosition.top = clientRect.top - parentRect.top;
           this.setState({dragging: newPosition});
-          setTimeout(this.stopDrag.bind(node), 2000)
           break;
         }
         case 'onDrag':
@@ -323,16 +322,13 @@ export default class GridItem extends React.Component {
           if (!this.state.dragging) throw new Error('onDrag called before onDragStart.');
           newPosition.left = this.state.dragging.left + deltaX;
           newPosition.top = this.state.dragging.top + deltaY;
-          this.setState({dragging: newPosition}, ()=>{
-
-            sectionsBounds.forEach(sectionBoundKey=>{
-              const sectionBound = this.props.sectionsBounds[sectionBoundKey];
-              if(this.collide(node, sectionBound)){
-                console.log('HIT----------');
-                this.stopDrag(node);
-              }
-            })
-
+          sectionsBounds.forEach(sectionBoundKey=>{
+            const sectionBound = this.props.sectionsBounds[sectionBoundKey];
+            if(this.collide(node.getBoundingClientRect(), sectionBound)){
+              this.stopDrag(e, node);
+            } else {
+              this.setState({dragging: newPosition});
+            }
           });
           break;
         case 'onDragStop':
@@ -348,7 +344,13 @@ export default class GridItem extends React.Component {
 
       const {x, y} = this.calcXY(newPosition.top, newPosition.left);
 
-      this.props[handlerName](this.props.i, x, y, {e, node, newPosition});
+      if(handlerName === 'onDrag') {
+        if(this.state.dragging) {
+          this.props[handlerName](this.props.i, x, y, {e, node, newPosition});
+        }
+      } else {
+        this.props[handlerName](this.props.i, x, y, {e, node, newPosition});
+      }
     };
   }
 
@@ -384,8 +386,6 @@ export default class GridItem extends React.Component {
   }
 
   collide = (node, sectionBound) => {
-    var node = node.getBoundingClientRect();
-
     return !(
       node.top > sectionBound.bottom ||
       node.right < sectionBound.left ||
