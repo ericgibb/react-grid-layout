@@ -24,20 +24,19 @@ class ShowcaseLayout extends Component {
   };
 
   componentDidMount() {
-    console.log('this.state.sectionsLayouts', this.state.sectionsLayouts)
     this.setState({
       mounted: true,
       sectionsBounds: this.getSectionsBounds(this.state.sectionsLayouts),
     });
   };
 
-  generateDOM(sectionGridLayout) {
+  generateDOM(sectionGridLayout, sectionKey) {
     return _.map(sectionGridLayout, function(l, i) {
       return (
-        <div key={i} className={l.static ? 'static' : ''}>
+        <div key={l.i} className={l.static ? 'static' : ''}>
           {l.static ?
             <span className="text" title="This item is static and cannot be removed or resized.">Static - {i}</span>
-            : <span className="text">{i}</span>
+            : <span className="text">{l.title} key {l.i}</span>
           }
         </div>);
     });
@@ -71,19 +70,32 @@ class ShowcaseLayout extends Component {
 
   getLayoutBounds(node) {
     const clientRect = node.getBoundingClientRect();
-    const scrollLeft = window.pageXOffset ||  (document.documentElement || document.body.parentNode || document.body).scrollLeft;
+    const scrollLeft = window.pageXOffset || (document.documentElement || document.body.parentNode || document.body).scrollLeft;
     const scrollTop = window.pageYOffset || (document.documentElement || document.body.parentNode || document.body).scrollTop;
-    //console.log('document.documentElement.scrollTop', document.documentElement.scrollTop)
-    console.log('scrollTop', scrollTop)
     return {
-      left : clientRect.left + scrollLeft,
-      top : clientRect.top + scrollTop,
-      bottom : clientRect.bottom,
-      right : clientRect.right,
+      left: clientRect.left + scrollLeft,
+      top: clientRect.top + scrollTop,
+      bottom: clientRect.bottom,
+      right: clientRect.right,
       width: clientRect.width,
       height: clientRect.height,
     };
   }
+
+
+  onGridItemChangeSection = (i, fromSectionKey, sectionKey)=> {
+    const gridItemSectionIndex = _.findIndex(this.state.sectionsLayouts[fromSectionKey], {i: i});
+    const gridItemToMove = _.cloneDeep(this.state.sectionsLayouts[fromSectionKey][gridItemSectionIndex]);
+    gridItemToMove.section = sectionKey;
+
+    const newState = this.state.sectionsLayouts;
+    newState[fromSectionKey] = newState[fromSectionKey].filter(gridItem => gridItem.i !== i);
+    newState[sectionKey] = [...newState[sectionKey], gridItemToMove];
+    this.setState({
+      sectionsLayouts: newState,
+    });
+  };
+
 
   getSectionsBounds(sections) {
     return Object.keys(sections).reduce((acc, key)=> {
@@ -110,6 +122,7 @@ class ShowcaseLayout extends Component {
             onDragStart={this.onGridItemDragStart}
             onDrag={this.onGridItemDrag}
             onDragStop={this.onGridItemDragStop}
+            onChangeSection={this.onGridItemChangeSection}
             // WidthProvider option
             measureBeforeMount={false}
             // I like to have it animate on mount. If you don't, delete `useCSSTransforms` (it's default `true`)
@@ -123,7 +136,6 @@ class ShowcaseLayout extends Component {
   }
 
   render() {
-    console.log('XXXXX sectionsBounds', this.state.sectionsBounds)
     return (
       <div>
         <div>
@@ -140,13 +152,16 @@ module.exports = ShowcaseLayout;
 function generateLayout() {
   return _.map(_.range(0, 25), function(item, i) {
     var y = Math.ceil(Math.random() * 4) + 1;
+    const section = i > 10 ? 'ana' : 'mere';
     return {
       x: _.random(0, 5) * 2 % 12,
-      section: _.random(0, 5) % 2 === 0 ? 'ana' : 'mere',
+      section: section,
       y: Math.floor(i / 6) * y,
       w: 2,
       h: y,
-      i: i.toString(),
+      i: `${i}`,
+      title: `${section}-${i}`,
+      drag: false,
       static: Math.random() < 0.05
     };
   });

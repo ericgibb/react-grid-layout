@@ -276,7 +276,8 @@ export default class GridItem extends React.Component {
 
   stopDrag = (e, node) => {
     const newUpEvent = new MouseEvent('mouseup', Object.assign({}, {...e}, {target: node}));
-    this.onDragHandler('onDragStop')(newUpEvent, {node});
+    node.dispatchEvent(newUpEvent)
+    //this.onDragHandler('onDragStop')(newUpEvent, {node});
   };
 
   startDrag = (node) => {
@@ -308,7 +309,7 @@ export default class GridItem extends React.Component {
       switch(handlerName) {
         case 'onDragStart':
         {
-          console.log('onDragStart');
+          console.log('onDragStart', node);
           // ToDo this wont work on nested parents
           const parentRect = node.offsetParent.getBoundingClientRect();
           const clientRect = node.getBoundingClientRect();
@@ -319,24 +320,32 @@ export default class GridItem extends React.Component {
         }
         case 'onDrag':
           console.log('onDrag');
+          if (this.state.changeSection) {
+            return false;
+          }
           if (!this.state.dragging) throw new Error('onDrag called before onDragStart.');
           newPosition.left = this.state.dragging.left + deltaX;
           newPosition.top = this.state.dragging.top + deltaY;
-          sectionsBounds.forEach(sectionBoundKey=>{
+          sectionsBounds.forEach(sectionBoundKey=> {
             const sectionBound = this.props.sectionsBounds[sectionBoundKey];
-            if(this.collide(node.getBoundingClientRect(), sectionBound)){
-              this.stopDrag(e, node);
+            if (this.collide(node.getBoundingClientRect(), sectionBound)) {
+              this.setState({
+                dragging: newPosition,
+                changeSection: true,
+                sectionKey: sectionBoundKey,
+              });
             } else {
-              this.setState({dragging: newPosition});
+              this.setState({
+                dragging: newPosition,
+                changeSection: false,
+                sectionKey: null,
+              });
             }
           });
           break;
         case 'onDragStop':
-          console.log('onDragSTOP--------');
+          console.log('onDragSTOP--------', this.props.i, e);
           if (!this.state.dragging) throw new Error('onDragEnd called before onDragStart.');
-          newPosition.left = this.state.dragging.left;
-          newPosition.top = this.state.dragging.top;
-          this.setState({dragging: null});
           break;
         default:
           throw new Error('onDragHandler called with unrecognized handlerName: ' + handlerName);
@@ -344,12 +353,17 @@ export default class GridItem extends React.Component {
 
       const {x, y} = this.calcXY(newPosition.top, newPosition.left);
 
-      if(handlerName === 'onDrag') {
-        if(this.state.dragging) {
+      if (handlerName === 'onDrag') {
+        if (this.state.dragging) {
           this.props[handlerName](this.props.i, x, y, {e, node, newPosition});
         }
       } else {
         this.props[handlerName](this.props.i, x, y, {e, node, newPosition});
+        if (handlerName === 'onDragStop') {
+          if (this.state.changeSection) {
+            this.props.onChangeSection(this.props.i, this.props.section, this.state.sectionKey);
+          }
+        }
       }
     };
   }
@@ -395,7 +409,9 @@ export default class GridItem extends React.Component {
   };
 
   render():React.Element<any> {
-    const {x, y, w, h, isDraggable, isResizable, useCSSTransforms, sectionsBounds} = this.props;
+    const {x, y, w, h, i, isDraggable, isResizable, useCSSTransforms, sectionsBounds} = this.props;
+
+    //console.log("state Dragging", this.state.dragging);
 
     //console.log('sectionsBounds------', sectionsBounds);
     //console.log('sectionsBounds------', this.props.section);

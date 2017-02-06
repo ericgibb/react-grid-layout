@@ -106,6 +106,8 @@ export default class ReactGridLayout extends React.Component {
     // Calls when resize is complete.
     onResizeStop: PropTypes.func,
 
+    onChangeSection: PropTypes.func,
+
     //
     // Other validations
     //
@@ -143,7 +145,8 @@ export default class ReactGridLayout extends React.Component {
     onDragStop: noop,
     onResizeStart: noop,
     onResize: noop,
-    onResizeStop: noop
+    onResizeStop: noop,
+    onChangeSection: noop,
   };
 
   state: State = {
@@ -411,6 +414,7 @@ export default class ReactGridLayout extends React.Component {
         onResizeStart={this.onResizeStart}
         onResize={this.onResize}
         onResizeStop={this.onResizeStop}
+        onChangeSection={this.props.onChangeSection}
         isDraggable={draggable}
         isResizable={resizable}
         useCSSTransforms={useCSSTransforms && mounted}
@@ -423,6 +427,7 @@ export default class ReactGridLayout extends React.Component {
         x={l.x}
         y={l.y}
         i={l.i}
+        title={l.title}
         minH={l.minH}
         minW={l.minW}
         maxH={l.maxH}
@@ -443,6 +448,7 @@ export default class ReactGridLayout extends React.Component {
       ...style
     };
 
+    console.log('React.Children', React.Children.count(this.props.children))
     return (
       <div className={mergedClassName} style={mergedStyle}>
         {React.Children.map(this.props.children, (child) => this.processGridItem(child))}
