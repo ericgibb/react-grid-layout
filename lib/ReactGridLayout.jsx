@@ -427,6 +427,8 @@ export default class ReactGridLayout extends React.Component {
         x={l.x}
         y={l.y}
         i={l.i}
+        drag={l.drag}
+        dragPosition={l.dragPosition}
         title={l.title}
         minH={l.minH}
         minW={l.minW}

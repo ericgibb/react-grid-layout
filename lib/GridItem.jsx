@@ -1,5 +1,7 @@
 // @flow
 import React, {PropTypes} from 'react';
+import {findDOMNode} from 'react-dom';
+
 import {DraggableCore} from 'react-draggable';
 import {Resizable} from 'react-resizable';
 import {perc, setTopLeft, setTransform} from './utils';
@@ -231,12 +233,14 @@ export default class GridItem extends React.Component {
    * @return {Element}          Child wrapped in Draggable.
    */
   mixinDraggable(child:React.Element<any>):React.Element<any> {
+    console.log('RENDER DRAGGABLE ITEM')
     return (
       <DraggableCore
         onStart={this.onDragHandler('onDragStart')}
         onDrag={this.onDragHandler('onDrag')}
         onStop={this.onDragHandler('onDragStop')}
         handle={this.props.handle}
+        ref={(dragItemCore)=> {this.dragItemCore = dragItemCore}}
         cancel={".react-resizable-handle" + (this.props.cancel ? "," + this.props.cancel : "")}>
         {child}
       </DraggableCore>
@@ -274,21 +278,37 @@ export default class GridItem extends React.Component {
     );
   }
 
+
   stopDrag = (e, node) => {
     const newUpEvent = new MouseEvent('mouseup', Object.assign({}, {...e}, {target: node}));
-    node.dispatchEvent(newUpEvent)
+    node.dispatchEvent(newUpEvent);
     //this.onDragHandler('onDragStop')(newUpEvent, {node});
   };
 
   startDrag = (node) => {
-    const newDownEvent = new MouseEvent('mousedown');
-    this.onDragHandler('onDragStart')(newDownEvent, {node});
+    const newDownEvent = new MouseEvent('mousedown', {target: node});
+    node.dispatchEvent(newDownEvent);
+    //this.onDragHandler('onDragStart')(newDownEvent, {node});
   };
 
-  moveDrag = (node) => {
-    const newMoveEvent = new MouseEvent('mousemove');
+  moveDrag = (node, dragPosition) => {
+    const newMoveEvent = new MouseEvent('mousemove', {target: node, clientX: 10, clientY: 100});
+    //node.dispatchEvent(newMoveEvent);
     this.onDragHandler('onDrag')(newMoveEvent, {node});
   };
+
+
+  componentWillUpdate(nextProps, nextState) {
+
+    if (nextProps.drag && !nextState.dragging) {
+      console.log('findDOMNode(this)', findDOMNode(this));
+      this.startDrag(findDOMNode(this));
+    }
+
+    if (nextProps.drag && this.state.dragging && nextState.dragging && this.state.dragging.top !== nextState.dragging.top && this.state.dragging.left !== nextState.dragging.left) {
+      //this.moveDrag(findDOMNode(this).ownerDocument, this.props.dragPosition);
+    }
+  }
 
   /**
    * Wrapper around drag events to provide more useful data.
@@ -319,7 +339,7 @@ export default class GridItem extends React.Component {
           break;
         }
         case 'onDrag':
-          console.log('onDrag');
+          console.log('onDrag change section', this.state.changeSection);
           if (this.state.changeSection) {
             return false;
           }
@@ -346,6 +366,9 @@ export default class GridItem extends React.Component {
         case 'onDragStop':
           console.log('onDragSTOP--------', this.props.i, e);
           if (!this.state.dragging) throw new Error('onDragEnd called before onDragStart.');
+          newPosition.left = this.state.dragging.left;
+          newPosition.top = this.state.dragging.top;
+          this.setState({dragging: null});
           break;
         default:
           throw new Error('onDragHandler called with unrecognized handlerName: ' + handlerName);
@@ -361,7 +384,7 @@ export default class GridItem extends React.Component {
         this.props[handlerName](this.props.i, x, y, {e, node, newPosition});
         if (handlerName === 'onDragStop') {
           if (this.state.changeSection) {
-            this.props.onChangeSection(this.props.i, this.props.section, this.state.sectionKey);
+            this.props.onChangeSection(this.props.i, this.props.section, this.state.sectionKey, newPosition);
           }
         }
       }
@@ -409,9 +432,9 @@ export default class GridItem extends React.Component {
   };
 
   render():React.Element<any> {
-    const {x, y, w, h, i, isDraggable, isResizable, useCSSTransforms, sectionsBounds} = this.props;
+    const {x, y, w, h, i, isDraggable,drag,dragPosition, isResizable, useCSSTransforms, sectionsBounds} = this.props;
 
-    //console.log("state Dragging", this.state.dragging);
+    //console.log("state Dragging", drag, dragPosition);
 
     //console.log('sectionsBounds------', sectionsBounds);
     //console.log('sectionsBounds------', this.props.section);
