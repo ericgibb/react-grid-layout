@@ -233,7 +233,7 @@ export default class GridItem extends React.Component {
    * @return {Element}          Child wrapped in Draggable.
    */
   mixinDraggable(child:React.Element<any>):React.Element<any> {
-    console.log('RENDER DRAGGABLE ITEM')
+    //console.log('RENDER DRAGGABLE ITEM')
     return (
       <DraggableCore
         onStart={this.onDragHandler('onDragStart')}
@@ -278,35 +278,16 @@ export default class GridItem extends React.Component {
     );
   }
 
-
-  stopDrag = (e, node) => {
-    const newUpEvent = new MouseEvent('mouseup', Object.assign({}, {...e}, {target: node}));
-    node.dispatchEvent(newUpEvent);
-    //this.onDragHandler('onDragStop')(newUpEvent, {node});
-  };
-
-  startDrag = (node) => {
+  startDrag = (node, draggingPosition) => {
     const newDownEvent = new MouseEvent('mousedown', {target: node});
-    node.dispatchEvent(newDownEvent);
-    //this.onDragHandler('onDragStart')(newDownEvent, {node});
+    findDOMNode(this.dragItemCore).dispatchEvent(newDownEvent);
+    //uncomment to trigger dragStart again on needed dragging element
+    //this.dragItemCore.handleDragStart(newDownEvent);
   };
 
-  moveDrag = (node, dragPosition) => {
-    const newMoveEvent = new MouseEvent('mousemove', {target: node, clientX: 10, clientY: 100});
-    //node.dispatchEvent(newMoveEvent);
-    this.onDragHandler('onDrag')(newMoveEvent, {node});
-  };
-
-
-  componentWillUpdate(nextProps, nextState) {
-
-    if (nextProps.drag && !nextState.dragging) {
-      console.log('findDOMNode(this)', findDOMNode(this));
-      this.startDrag(findDOMNode(this));
-    }
-
-    if (nextProps.drag && this.state.dragging && nextState.dragging && this.state.dragging.top !== nextState.dragging.top && this.state.dragging.left !== nextState.dragging.left) {
-      //this.moveDrag(findDOMNode(this).ownerDocument, this.props.dragPosition);
+  componentDidUpdate(prevProps, prevState) {
+    if (prevProps.drag && !prevState.dragging) {
+      this.startDrag(findDOMNode(this), this.props.dragPosition);
     }
   }
 
@@ -329,7 +310,7 @@ export default class GridItem extends React.Component {
       switch(handlerName) {
         case 'onDragStart':
         {
-          console.log('onDragStart', node);
+          //console.log('onDragStart', node);
           // ToDo this wont work on nested parents
           const parentRect = node.offsetParent.getBoundingClientRect();
           const clientRect = node.getBoundingClientRect();
@@ -339,7 +320,7 @@ export default class GridItem extends React.Component {
           break;
         }
         case 'onDrag':
-          console.log('onDrag change section', this.state.changeSection);
+          //console.log('onDrag change section', this.state.changeSection);
           if (this.state.changeSection) {
             return false;
           }
@@ -364,7 +345,6 @@ export default class GridItem extends React.Component {
           });
           break;
         case 'onDragStop':
-          console.log('onDragSTOP--------', this.props.i, e);
           if (!this.state.dragging) throw new Error('onDragEnd called before onDragStart.');
           newPosition.left = this.state.dragging.left;
           newPosition.top = this.state.dragging.top;
@@ -434,10 +414,6 @@ export default class GridItem extends React.Component {
   render():React.Element<any> {
     const {x, y, w, h, i, isDraggable,drag,dragPosition, isResizable, useCSSTransforms, sectionsBounds} = this.props;
 
-    //console.log("state Dragging", drag, dragPosition);
-
-    //console.log('sectionsBounds------', sectionsBounds);
-    //console.log('sectionsBounds------', this.props.section);
     const pos = this.calcPosition(x, y, w, h, this.state);
     const child = React.Children.only(this.props.children);
 

@@ -50,9 +50,6 @@ class ShowcaseLayout extends Component {
 
   onLayoutChange = (layout, layouts) => {
     console.log('ON LAYOUT CHANGED', this.state.sectionsLayouts);
-    //this.setState({
-    //  sectionsBounds: this.getSectionsBounds(this.state.sectionsLayouts),
-    //});
     this.props.onLayoutChange(layout, layouts);
   };
 
@@ -95,6 +92,10 @@ class ShowcaseLayout extends Component {
     newState[sectionKey] = [...newState[sectionKey], gridItemToMove];
     this.setState({
       sectionsLayouts: newState,
+    },()=>{
+      this.setState({
+        sectionsBounds: this.getSectionsBounds(this.state.sectionsLayouts),
+      });
     });
   };
 
