@@ -23,12 +23,23 @@ class ShowcaseLayout extends Component {
     sectionsLayouts: this.props.initialSectionsLayouts
   };
 
+  onScroll = ()=> {
+    this.setState({
+      sectionsBounds: this.getSectionsBounds(this.state.sectionsLayouts),
+    });
+  };
+
   componentDidMount() {
+    window.addEventListener('scroll', _.throttle(this.onScroll, 100));
     this.setState({
       mounted: true,
       sectionsBounds: this.getSectionsBounds(this.state.sectionsLayouts),
     });
   };
+
+  componentDidUnmount() {
+    window.removeEventListener('scroll', this.onScroll);
+  }
 
   generateDOM(sectionGridLayout, sectionKey) {
     return _.map(sectionGridLayout, function(l, i) {
