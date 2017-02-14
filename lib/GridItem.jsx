@@ -288,6 +288,7 @@ export default class GridItem extends React.Component {
       clientY: draggingPosition.y - (draggingPosition.y - nodeBounds.top)
     });
     findDOMNode(this.dragItemCore).dispatchEvent(newDownEvent);
+    // this is a hack since https://github.com/mzabriskie/react-draggable/issues/89
     this.dragItemCore.handleDragStart(newDownEvent);
   };
 
