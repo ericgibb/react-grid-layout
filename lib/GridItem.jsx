@@ -11,6 +11,7 @@ import type {DragCallbackData, Position} from './utils';
 type State = {
   resizing: ?{width: number, height: number},
   dragging: ?{top: number, left: number},
+  startDragging: ?{top: number, left: number},
   className: string
 };
 
@@ -101,6 +102,7 @@ export default class GridItem extends React.Component {
   state:State = {
     resizing: null,
     dragging: null,
+    startDragPosition: null,
     className: ''
   };
 
@@ -279,10 +281,14 @@ export default class GridItem extends React.Component {
   }
 
   startDrag = (node, draggingPosition) => {
-    const newDownEvent = new MouseEvent('mousedown', {target: node});
+    const nodeBounds = node.getBoundingClientRect();
+    const newDownEvent = new MouseEvent('mousedown', {
+      target: node,
+      clientX: draggingPosition.x - (draggingPosition.x - nodeBounds.left),
+      clientY: draggingPosition.y - (draggingPosition.y - nodeBounds.top)
+    });
     findDOMNode(this.dragItemCore).dispatchEvent(newDownEvent);
-    //uncomment to trigger dragStart again on needed dragging element
-    //this.dragItemCore.handleDragStart(newDownEvent);
+    this.dragItemCore.handleDragStart(newDownEvent);
   };
 
   componentDidUpdate(prevProps, prevState) {
@@ -305,7 +311,6 @@ export default class GridItem extends React.Component {
 
       const newPosition:{top: number, left: number,width: number,height: number} = {top: 0, left: 0};
       const sectionsBounds = Object.keys(this.props.sectionsBounds).filter(sectionKey=> sectionKey !== this.props.section);
-
       // Get new XY
       switch(handlerName) {
         case 'onDragStart':
@@ -320,7 +325,7 @@ export default class GridItem extends React.Component {
           break;
         }
         case 'onDrag':
-          //console.log('onDrag change section', this.state.changeSection);
+          console.log('onDrag change section', this.state.changeSection);
           if (this.state.changeSection) {
             return false;
           }
@@ -332,6 +337,7 @@ export default class GridItem extends React.Component {
             if (this.collide(node.getBoundingClientRect(), sectionBound)) {
               this.setState({
                 dragging: newPosition,
+                startDragging: {x: e.screenX - deltaX, y: e.screenY - deltaY},
                 changeSection: true,
                 sectionKey: sectionBoundKey,
               });
@@ -364,7 +370,11 @@ export default class GridItem extends React.Component {
         this.props[handlerName](this.props.i, x, y, {e, node, newPosition});
         if (handlerName === 'onDragStop') {
           if (this.state.changeSection) {
-            this.props.onChangeSection(this.props.i, this.props.section, this.state.sectionKey, newPosition);
+            this.setState({
+              changeSection: false,
+            }, ()=> {
+              this.props.onChangeSection(this.props.i, this.props.section, this.state.sectionKey, this.state.startDragging);
+            })
           }
         }
       }

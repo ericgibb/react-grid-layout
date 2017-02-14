@@ -37,7 +37,7 @@ class ShowcaseLayout extends Component {
     });
   };
 
-  componentDidUnmount() {
+  componentWillUnmount() {
     window.removeEventListener('scroll', this.onScroll);
   }
 
