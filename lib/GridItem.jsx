@@ -285,7 +285,9 @@ export default class GridItem extends React.Component {
     const newDownEvent = new MouseEvent('mousedown', {
       target: node,
       clientX: draggingPosition.x - (draggingPosition.x - nodeBounds.left),
-      clientY: draggingPosition.y - (draggingPosition.y - nodeBounds.top)
+      clientY: draggingPosition.y - (draggingPosition.y - nodeBounds.top),
+      bubbles: true,
+      cancelable: false
     });
     findDOMNode(this.dragItemCore).dispatchEvent(newDownEvent);
     // this is a hack since https://github.com/mzabriskie/react-draggable/issues/89
