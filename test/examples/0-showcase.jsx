@@ -61,7 +61,7 @@ class ShowcaseLayout extends Component {
 
   onLayoutChange = (layout, layouts) => {
     console.log('ON LAYOUT CHANGED', this.state.sectionsLayouts);
-    this.props.onLayoutChange(layout, layouts);
+    //this.props.onLayoutChange(layout, layouts);
   };
 
   onGridItemDragStart = (layout, oldDragItem, l, placeholder, e, node)=> {
@@ -73,7 +73,7 @@ class ShowcaseLayout extends Component {
   };
 
   onGridItemDragStop = () => {
-    console.log('onGridItemDragStop')
+
   };
 
   getLayoutBounds(node) {
@@ -91,11 +91,11 @@ class ShowcaseLayout extends Component {
   }
 
 
-  onGridItemChangeSection = (i, fromSectionKey, sectionKey, toPosition)=> {
+  onGridItemChangeSection = (i, fromSectionKey, sectionKey, toPosition, shouldDrag = true)=> {
     const gridItemSectionIndex = _.findIndex(this.state.sectionsLayouts[fromSectionKey], {i: i});
     const gridItemToMove = _.cloneDeep(this.state.sectionsLayouts[fromSectionKey][gridItemSectionIndex]);
     gridItemToMove.section = sectionKey;
-    gridItemToMove.drag = true;
+    gridItemToMove.drag = shouldDrag;
     gridItemToMove.dragPosition = toPosition;
 
     const newState = this.state.sectionsLayouts;
@@ -103,7 +103,7 @@ class ShowcaseLayout extends Component {
     newState[sectionKey] = [...newState[sectionKey], gridItemToMove];
     this.setState({
       sectionsLayouts: newState,
-    },()=>{
+    }, ()=> {
       this.setState({
         sectionsBounds: this.getSectionsBounds(this.state.sectionsLayouts),
       });
@@ -120,6 +120,7 @@ class ShowcaseLayout extends Component {
 
 
   renderGridLayouts() {
+    console.log("RENDER RESPONSIVE LAYOUTS");
     return Object.keys(this.state.sectionsLayouts).map((sectionKey, index)=> {
       const sectionData = this.state.sectionsLayouts[sectionKey];
       return (
@@ -169,14 +170,14 @@ function generateLayout() {
     const section = i > 10 ? 'ana' : 'mere';
     return {
       x: _.random(0, 5) * 2 % 12,
-      section: section,
       y: Math.floor(i / 6) * y,
       w: 2,
       h: y,
       i: `${i}`,
       title: `${section}-${i}`,
       drag: false,
-      static: Math.random() < 0.05
+      section: section,
+      static: Math.random() < 0.05,
     };
   });
 }

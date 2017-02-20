@@ -2,7 +2,7 @@
 import React, {PropTypes} from 'react';
 import isEqual from 'lodash.isequal';
 import {autoBindHandlers, bottom, childrenEqual, cloneLayoutItem, compact, getLayoutItem, moveElement,
-  synchronizeLayoutWithChildren, validateLayout} from './utils';
+  synchronizeLayoutWithChildren, validateLayout, resetLayoutItems} from './utils';
 import GridItem from './GridItem';
 const noop = function() {};
 
@@ -262,25 +262,34 @@ export default class ReactGridLayout extends React.Component {
    * @param {Event} e The mousedown event
    * @param {Element} node The current dragging DOM element
    */
-  onDragStop(i:string, x:number, y:number, {e, node}: DragEvent) {
+  onDragStop(i:string, x:number, y:number, {e, node}: DragEvent, resetItems = false) {
     const {oldDragItem} = this.state;
     let {layout} = this.state;
     const l = getLayoutItem(layout, i);
+
     if (!l) return;
 
     // Move the element here
     layout = moveElement(layout, l, x, y, true /* isUserAction */);
 
-    this.props.onDragStop(layout, oldDragItem, l, null, e, node);
+
 
     // Set state
-    const newLayout = compact(layout, this.props.verticalCompact);
+    let newLayout = compact(layout, this.props.verticalCompact);
+
+    if(resetItems) {
+      newLayout = resetLayoutItems(newLayout)
+    }
+
     const {oldLayout} = this.state;
+
     this.setState({
       activeDrag: null,
       layout: newLayout,
       oldDragItem: null,
       oldLayout: null,
+    }, ()=> {
+      this.props.onDragStop(layout, oldDragItem, l, null, e, node);
     });
 
     this.onLayoutMaybeChanged(newLayout, oldLayout);

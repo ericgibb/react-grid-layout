@@ -103,6 +103,7 @@ export default class GridItem extends React.Component {
     resizing: null,
     dragging: null,
     startDragPosition: null,
+    changeSection: false,
     className: ''
   };
 
@@ -235,7 +236,6 @@ export default class GridItem extends React.Component {
    * @return {Element}          Child wrapped in Draggable.
    */
   mixinDraggable(child:React.Element<any>):React.Element<any> {
-    //console.log('RENDER DRAGGABLE ITEM')
     return (
       <DraggableCore
         onStart={this.onDragHandler('onDragStart')}
@@ -287,15 +287,17 @@ export default class GridItem extends React.Component {
       clientX: draggingPosition.x - (draggingPosition.x - nodeBounds.left),
       clientY: draggingPosition.y - (draggingPosition.y - nodeBounds.top),
       bubbles: true,
+      capture: false,
       cancelable: false
     });
+
     findDOMNode(this.dragItemCore).dispatchEvent(newDownEvent);
     // this is a hack since https://github.com/mzabriskie/react-draggable/issues/89
-    this.dragItemCore.handleDragStart(newDownEvent);
   };
 
   componentDidUpdate(prevProps, prevState) {
-    if (prevProps.drag && !prevState.dragging) {
+
+    if (this.props.drag && !prevState.dragging) {
       this.startDrag(findDOMNode(this), this.props.dragPosition);
     }
   }
@@ -369,17 +371,25 @@ export default class GridItem extends React.Component {
         if (this.state.dragging) {
           this.props[handlerName](this.props.i, x, y, {e, node, newPosition});
         }
+      } else if (handlerName === 'onDragStop') {
+        if (this.state.changeSection) {
+          this.setState({
+            changeSection: false,
+          }, ()=> {
+            this.props.onChangeSection(this.props.i, this.props.section, this.state.sectionKey, this.state.startDragging);
+          })
+        }
+        else {
+          this.props[handlerName](this.props.i, x, y, {
+              e,
+              node,
+              newPosition,
+            },
+            this.props.drag ? true : false
+          );
+        }
       } else {
         this.props[handlerName](this.props.i, x, y, {e, node, newPosition});
-        if (handlerName === 'onDragStop') {
-          if (this.state.changeSection) {
-            this.setState({
-              changeSection: false,
-            }, ()=> {
-              this.props.onChangeSection(this.props.i, this.props.section, this.state.sectionKey, this.state.startDragging);
-            })
-          }
-        }
       }
     };
   }
