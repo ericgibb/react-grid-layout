@@ -92,15 +92,23 @@ class ShowcaseLayout extends Component {
 
 
   onGridItemChangeSection = (i, fromSectionKey, sectionKey, toPosition, shouldDrag = true)=> {
+    let newState = this.state.sectionsLayouts;
+    Object.keys(newState).map((sectionKey) => {
+      newState[sectionKey] = newState[sectionKey].map((gridItem) => {
+        gridItem.drag = false;
+        return gridItem;
+      })
+    });
     const gridItemSectionIndex = _.findIndex(this.state.sectionsLayouts[fromSectionKey], {i: i});
     const gridItemToMove = _.cloneDeep(this.state.sectionsLayouts[fromSectionKey][gridItemSectionIndex]);
     gridItemToMove.section = sectionKey;
     gridItemToMove.drag = shouldDrag;
     gridItemToMove.dragPosition = toPosition;
 
-    const newState = this.state.sectionsLayouts;
+
     newState[fromSectionKey] = newState[fromSectionKey].filter(gridItem => gridItem.i !== i);
     newState[sectionKey] = [...newState[sectionKey], gridItemToMove];
+
     this.setState({
       sectionsLayouts: newState,
     }, ()=> {

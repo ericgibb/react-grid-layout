@@ -284,8 +284,8 @@ export default class GridItem extends React.Component {
     const nodeBounds = node.getBoundingClientRect();
     const newDownEvent = new MouseEvent('mousedown', {
       target: node,
-      clientX: draggingPosition.x - (draggingPosition.x - nodeBounds.left),
-      clientY: draggingPosition.y - (draggingPosition.y - nodeBounds.top),
+      clientX:  nodeBounds.left + draggingPosition.x ,
+      clientY: nodeBounds.top + draggingPosition.y ,
       bubbles: true,
       capture: false,
       cancelable: false
@@ -342,7 +342,7 @@ export default class GridItem extends React.Component {
             if (this.collide(node.getBoundingClientRect(), sectionBound)) {
               this.setState({
                 dragging: newPosition,
-                startDragging: {x: e.screenX - deltaX, y: e.screenY - deltaY},
+                startDragging: {x: e.offsetX, y: e.offsetY},
                 changeSection: true,
                 sectionKey: sectionBoundKey,
               });
