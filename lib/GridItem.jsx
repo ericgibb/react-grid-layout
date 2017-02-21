@@ -376,6 +376,7 @@ export default class GridItem extends React.Component {
           this.setState({
             changeSection: false,
           }, ()=> {
+            this.props[handlerName](this.props.i, x, y, {e, node, newPosition});
             this.props.onChangeSection(this.props.i, this.props.section, this.state.sectionKey, this.state.startDragging);
           })
         }
