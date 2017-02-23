@@ -11,7 +11,8 @@ import type {DragCallbackData, Position} from './utils';
 type State = {
   resizing: ?{width: number, height: number},
   dragging: ?{top: number, left: number},
-  startDragging: ?{top: number, left: number},
+  mouseOffset: ?{offsetX: number, offsetY: number},
+  sectionKey:?{},
   className: string
 };
 
@@ -102,7 +103,8 @@ export default class GridItem extends React.Component {
   state:State = {
     resizing: null,
     dragging: null,
-    startDragPosition: null,
+    sectionKey: null,
+    mouseOffset: {offsetX: 0, offsetY: 0},
     className: ''
   };
 
@@ -241,7 +243,6 @@ export default class GridItem extends React.Component {
         onDrag={this.onDragHandler('onDrag')}
         onStop={this.onDragHandler('onDragStop')}
         handle={this.props.handle}
-        ref={(dragItemCore)=> {this.dragItemCore = dragItemCore}}
         cancel={".react-resizable-handle" + (this.props.cancel ? "," + this.props.cancel : "")}>
         {child}
       </DraggableCore>
@@ -283,8 +284,8 @@ export default class GridItem extends React.Component {
     const nodeBounds = node.getBoundingClientRect();
     const newDownEvent = new MouseEvent('mousedown', {
       target: node,
-      clientX:  nodeBounds.left + draggingPosition.x ,
-      clientY: nodeBounds.top + draggingPosition.y ,
+      clientX: nodeBounds.left + draggingPosition.offsetX,
+      clientY: nodeBounds.top + draggingPosition.offsetY,
       bubbles: true,
       capture: false,
       cancelable: false
@@ -319,8 +320,6 @@ export default class GridItem extends React.Component {
       switch(handlerName) {
         case 'onDragStart':
         {
-          //console.log('onDragStart', node);
-          // ToDo this wont work on nested parents
           const parentRect = node.offsetParent.getBoundingClientRect();
           const clientRect = node.getBoundingClientRect();
           newPosition.left = clientRect.left - parentRect.left;
@@ -335,13 +334,14 @@ export default class GridItem extends React.Component {
           if (!this.state.dragging) throw new Error('onDrag called before onDragStart.');
           newPosition.left = this.state.dragging.left + deltaX;
           newPosition.top = this.state.dragging.top + deltaY;
+          const nodeRect = node.getBoundingClientRect();
           sectionsBounds.forEach(sectionBoundKey=> {
             const sectionBound = this.props.sectionsBounds[sectionBoundKey];
-            if (this.collide(node.getBoundingClientRect(), sectionBound)) {
+            if (this.collide(nodeRect, sectionBound)) {
               this.setState({
                 dragging: newPosition,
-                startDragging: {x: e.offsetX, y: e.offsetY},
                 sectionKey: sectionBoundKey,
+                mouseOffset: {offsetX: e.offsetX, offsetY: e.offsetY},
               });
             } else {
               this.setState({
@@ -374,7 +374,7 @@ export default class GridItem extends React.Component {
             sectionKey: null,
           }, ()=> {
             this.props[handlerName](this.props.i, x, y, {e, node, newPosition});
-            this.props.onChangeSection(this.props.i, this.props.section, cacheSectionKey, this.state.startDragging);
+            this.props.onChangeSection(this.props.i, this.props.section, cacheSectionKey, this.state.mouseOffset);
           })
         }
         else {

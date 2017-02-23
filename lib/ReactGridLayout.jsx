@@ -459,7 +459,6 @@ export default class ReactGridLayout extends React.Component {
       ...style
     };
 
-    //console.log('React.Children', React.Children.count(this.props.children))
     return (
       <div className={mergedClassName} style={mergedStyle}>
         {React.Children.map(this.props.children, (child) => this.processGridItem(child))}
