@@ -103,7 +103,6 @@ export default class GridItem extends React.Component {
     resizing: null,
     dragging: null,
     startDragPosition: null,
-    changeSection: false,
     className: ''
   };
 
@@ -330,8 +329,7 @@ export default class GridItem extends React.Component {
           break;
         }
         case 'onDrag':
-          console.log('onDrag change section', this.state.changeSection);
-          if (this.state.changeSection) {
+          if (this.state.sectionKey) {
             return false;
           }
           if (!this.state.dragging) throw new Error('onDrag called before onDragStart.');
@@ -343,13 +341,11 @@ export default class GridItem extends React.Component {
               this.setState({
                 dragging: newPosition,
                 startDragging: {x: e.offsetX, y: e.offsetY},
-                changeSection: true,
                 sectionKey: sectionBoundKey,
               });
             } else {
               this.setState({
                 dragging: newPosition,
-                changeSection: false,
                 sectionKey: null,
               });
             }
@@ -372,12 +368,13 @@ export default class GridItem extends React.Component {
           this.props[handlerName](this.props.i, x, y, {e, node, newPosition});
         }
       } else if (handlerName === 'onDragStop') {
-        if (this.state.changeSection) {
+        if (this.state.sectionKey) {
+          const cacheSectionKey = this.state.sectionKey;
           this.setState({
-            changeSection: false,
+            sectionKey: null,
           }, ()=> {
             this.props[handlerName](this.props.i, x, y, {e, node, newPosition});
-            this.props.onChangeSection(this.props.i, this.props.section, this.state.sectionKey, this.state.startDragging);
+            this.props.onChangeSection(this.props.i, this.props.section, cacheSectionKey, this.state.startDragging);
           })
         }
         else {
