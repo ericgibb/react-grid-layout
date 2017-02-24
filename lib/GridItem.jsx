@@ -291,8 +291,7 @@ export default class GridItem extends React.Component {
       cancelable: false
     });
 
-    findDOMNode(this.dragItemCore).dispatchEvent(newDownEvent);
-    // this is a hack since https://github.com/mzabriskie/react-draggable/issues/89
+    node.dispatchEvent(newDownEvent);
   };
 
   componentDidUpdate(prevProps, prevState) {
