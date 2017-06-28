@@ -12,6 +12,7 @@
     "prepublishOnly": "make build",
     "validate": "npm ls"
   },
+  "private": true,
   "repository": {
     "type": "git",
     "url": "git@github.com:STRML/react-grid-layout.git"
@@ -73,8 +74,5 @@
     "valiquire": "^0.3.0",
     "webpack": "^1.12.13",
     "webpack-dev-server": "^1.14.1"
-  },
-  "publishConfig": {
-    "registry": "https://registry.npmjs.org"
   }
 }
